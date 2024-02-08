@@ -1,0 +1,24 @@
+.TH BIKES 7
+.SH NAME
+bikes \- nearby citybike stations
+.SH SYNOPSIS
+.B bikes
+.SH DESCRIPTION
+.P
+A simple webapp that shows nearby citybike stations.
+.SH OPTIONS
+By default, the systemd unit defined in
+.I /lib/systemd/system/bikes.service
+reads the following environment variables from
+.IR /etc/bikes/env :
+
+.IP DATABASE_URL
+path to database file
+.IP PORT
+server port
+.IP DIGITRANSIT_API_KEY
+apikey for digitransit from https://portal-api.digitransit.fi
+.IP DIGITRANSIT_ROUTING_URL
+usually https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql
+.IP DIGITRANSIT_IMG_URL
+usually https://cdn.digitransit.fi/map/v2/hsl-map

@@ -1,0 +1,11 @@
+Package: bikes
+Version: x.y.z
+Section: utils
+Priority: optional
+Maintainer: Markus Paasiniemi <paasim@iki.fi>
+Homepage: https://github.com/paasim/bikes
+Architecture: amd64
+Depends: libc6
+Description: nearby bikes
+ See nearby bikes on a map. Supports either closest stations with gps or
+ presaved locations. Also caches the images.

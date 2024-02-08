@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS station_group (
+  name      TEXT PRIMARY KEY CHECK ( LENGTH(name) > 3 ),
+  lon       REAL NOT NULL CHECK ( lon BETWEEN 24.6 AND 25.1 ),
+  lat       REAL NOT NULL CHECK ( lat BETWEEN 60.1 AND 60.3 ),
+  distance  INTEGER NOT NULL CHECK ( distance BETWEEN 20 AND 2000 )
+) STRICT, WITHOUT ROWID;
+
+CREATE TABLE IF NOT EXISTS image (
+  x         INTEGER NOT NULL CHECK ( x > 0 ),
+  y         INTEGER NOT NULL CHECK ( y > 0 ),
+  z         INTEGER NOT NULL CHECK ( z BETWEEN 0 AND 20 ),
+  data      BLOB NOT NULL,
+  created   INTEGER NOT NULL DEFAULT (unixepoch()),
+  PRIMARY KEY (x, y, z)
+) STRICT, WITHOUT ROWID;

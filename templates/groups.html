@@ -1,0 +1,6 @@
+<ul>
+  <li><a href="/nearby-stations">Current</a></li>
+  {%- for group in groups -%}
+  <li><a href="/stations/{{ group.name() }}">{{ group.name() }}</a></li>
+  {%- endfor %}
+</ul>

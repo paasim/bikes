@@ -1,0 +1,10 @@
+<table>
+  {% for station in stations %}
+  <tr class="{{ station.count_class() }}">
+    <td>{{ station.id }}</td>
+    <td>{{ station.name }}</td>
+    <td>{{ station.count }} bikes</td>
+    <td>{{ station.distance - station.distance.rem_euclid(10) }} m</td>
+  </tr>
+  {% endfor %}
+</table>

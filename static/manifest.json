@@ -1,0 +1,18 @@
+{
+  "name": "bikes",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffa3a9",
+  "theme_color": "#ffa3a9",
+  "icons": [
+    { "src": "bike.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}

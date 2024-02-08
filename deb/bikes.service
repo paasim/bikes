@@ -1,0 +1,16 @@
+[Unit]
+Description=Nearby bikes
+
+[Service]
+DynamicUser=yes
+User=_bikes
+Group=bikes
+StateDirectory=bikes
+Restart=on-failure
+EnvironmentFile=/etc/bikes/env
+ReadOnlyPaths=/usr/share/bikes
+WorkingDirectory=/usr/share/bikes
+ExecStart=/usr/bin/bikes
+
+[Install]
+WantedBy=multi-user.target

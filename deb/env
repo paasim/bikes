@@ -1,0 +1,5 @@
+DATABASE_URL=sqlite:/var/lib/bikes/bikes.db
+PORT=3050
+DIGITRANSIT_API_KEY=APIKEY
+DIGITRANSIT_ROUTING_URL=https://api.digitransit.fi/routing/v1/routers/hsl/index/graphql
+DIGITRANSIT_IMG_URL=https://cdn.digitransit.fi/map/v2/hsl-map

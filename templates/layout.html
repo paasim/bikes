@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>bikes</title>
+  <meta charset="utf-8" />
+  <meta name="theme-color" content="#ffa3a9" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" href="/style.css" />
+  <link rel="icon" href="/bike.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  {% match data %}
+  {% when PageData::GetCurrent %}
+  <script src="/pos.js"></script>
+  {% else %}
+  {% endmatch %}
+</head>
+
+<body>
+  <nav>
+    {% include "groups.html" %}
+  </nav>
+  {% match data %}
+  {% when PageData::Data with {stations, ref_point, pixels} %}
+  <main>
+    {% include "imgs.html" %}
+    {% include "stations.html" %}
+  </main>
+  {% else %}
+  {% endmatch %}
+</body>
+
+</html>

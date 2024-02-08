@@ -1,0 +1,10 @@
+<div class="img-container" style="width: {{ pixels }}px">
+  <img src="{{ ref_point.img_url(0, 0) }}" style="border-top-left-radius: var(--img-radius)" />
+  <img src="{{ ref_point.img_url(1, 0) }}" style="border-top-right-radius: var(--img-radius)" />
+  <img src="{{ ref_point.img_url(0, 1) }}" style="border-bottom-left-radius: var(--img-radius)" />
+  <img src="{{ ref_point.img_url(1, 1) }}" style="border-bottom-right-radius: var(--img-radius)" />
+  {% for station in stations %}
+  <p class="pin {{ station.count_class() }}" style="{{ station.pin_loc(ref_point, pixels.clone()) }}">{{ station.id }}
+  </p>
+  {% endfor %}
+</div>
