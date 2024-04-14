@@ -3,6 +3,7 @@ use crate::err::Res;
 use axum::extract::{Query, State};
 use serde::Deserialize;
 use sqlx::{query, SqlitePool};
+use std::ops::Add;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -13,12 +14,30 @@ pub struct Tile {
 }
 
 impl Tile {
+    pub fn ref_point(z: u8, lon_deg: f64, lat_deg: f64) -> Tile {
+        let n = 1 << z;
+        let x = (lon_x(n, lon_deg) - 0.5) as u32;
+        let y = (lat_y(n, lat_deg) - 0.5) as u32;
+        Self { x, y, z }
+    }
+
+    pub fn rel_coord(&self, px: u16, lon_deg: f64, lat_deg: f64) -> Option<(u16, u16)> {
+        let n = 1 << self.z;
+        let px = px as f64;
+        let x = (lon_x(n, lon_deg) - self.x as f64) / 2.0 * px;
+        let y = (lat_y(n, lat_deg) - self.y as f64) / 2.0 * px;
+        if x.min(y) < 0.0 || x.max(y) > px {
+            return None;
+        }
+        Some((x.round() as u16, y.round() as u16))
+    }
+
     pub fn digitransit_url(&self, img_url: &str) -> String {
-        format!("{}/{}/{}/{}@2x.png", img_url, self.z, self.x, self.y,)
+        format!("{}/{}/{}/{}@2x.png", img_url, self.z, self.x, self.y)
     }
 
     pub fn img_url(&self, dx: u32, dy: u32) -> String {
-        format!("/img?z={}&x={}&y={}", self.z, self.x + dx, self.y + dy,)
+        format!("/img?z={}&x={}&y={}", self.z, self.x + dx, self.y + dy)
     }
 
     pub async fn get_cached_img(&self, pool: &SqlitePool) -> Res<Option<Vec<u8>>> {
@@ -49,37 +68,18 @@ impl Tile {
         .await?;
         Ok(())
     }
-
-    pub fn from_lat_lons<L: Iterator<Item = (f64, f64)>>(lat_lons: L) -> Option<Self> {
-        let init = (180.0, 180.0, -180.0, -180.0);
-        let lims = lat_lons.fold(init, |(min_lat, min_lon, max_lat, max_lon), (lat, lon)| {
-            (
-                std::cmp::min_by(min_lat, lat, f64::total_cmp),
-                std::cmp::min_by(min_lon, lon, f64::total_cmp),
-                std::cmp::max_by(max_lat, lat, f64::total_cmp),
-                std::cmp::max_by(max_lon, lon, f64::total_cmp),
-            )
-        });
-        tile_from_lims(lims)
-    }
 }
 
-fn tile_from_lims((min_lat, min_lon, max_lat, max_lon): (f64, f64, f64, f64)) -> Option<Tile> {
-    let tiles = 2.0;
-    for z in (10..20).rev() {
-        let x = f64::floor(lon_x(1 << z, min_lon));
-        let y = f64::floor(lat_y(1 << z, max_lat));
-        let dx = f64::floor(lon_x(1 << z, max_lon)) - x;
-        let dy = f64::floor(lat_y(1 << z, min_lat)) - y;
-        if f64::max(dx, dy) < tiles {
-            return Some(Tile {
-                x: x as u32,
-                y: y as u32,
-                z,
-            });
-        }
+impl Add<(i8, i8)> for Tile {
+    type Output = Self;
+
+    fn add(mut self, (dx, dy): (i8, i8)) -> Self::Output {
+        self.x += dx.max(0) as u32;
+        self.x -= dx.min(0).unsigned_abs() as u32;
+        self.y += dy.max(0) as u32;
+        self.y -= dy.min(0).unsigned_abs() as u32;
+        self
     }
-    None
 }
 
 pub fn lon_x(n: u64, lon_deg: f64) -> f64 {
@@ -88,7 +88,26 @@ pub fn lon_x(n: u64, lon_deg: f64) -> f64 {
 
 pub fn lat_y(n: u64, lat_deg: f64) -> f64 {
     let lat_rad = (lat_deg / 180.0) * std::f64::consts::PI;
-    ((1.0 - lat_rad.tan().asinh() / std::f64::consts::PI) / 2.0) * n as f64
+    (1.0 - lat_rad.tan().asinh() / std::f64::consts::PI) / 2.0 * n as f64
+}
+
+// approx 600m for zoom level 15, => diagonal is approx 850m
+fn _tile_height_m(n: u64) -> f64 {
+    let y = lat_y(n, 60.0) as u32;
+    (y_lat(n, y) - y_lat(n, y + 1)) * 110.412 * 1000.0
+}
+
+#[allow(dead_code)] // for tests
+pub fn x_lon(n: u64, x: u32) -> f64 {
+    x as f64 / (n as f64) * 360.0 - 180.0
+}
+
+#[allow(dead_code)] // for tests
+pub fn y_lat(n: u64, y: u32) -> f64 {
+    let lat_rad = ((1.0 - y as f64 / n as f64 * 2.0) * std::f64::consts::PI)
+        .sinh()
+        .atan();
+    lat_rad / std::f64::consts::PI * 180.0
 }
 
 pub async fn get_img(
@@ -98,13 +117,31 @@ pub async fn get_img(
     if let Some(v) = tile.get_cached_img(&pool).await? {
         return Ok(v);
     }
-    let url = tile.digitransit_url(&dt_conf.img_url);
-    let req = reqwest::Client::new()
-        .get(url)
-        .header("digitransit-subscription-key", &dt_conf.api_key)
-        .send()
-        .await?;
-    let b = req.bytes().await?.to_vec();
+    let resp = dt_conf.img_request(&tile).await?;
+    let b = resp.bytes().await?.to_vec();
     tile.cache_img(&pool, &b).await?;
     Ok(b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lon_x_is_inv_of_x_lon() {
+        let n = 2u64.pow(15);
+        let x = 18651;
+        let lon = x_lon(n, x);
+        let x2 = lon_x(n, lon);
+        assert!(x2 as u32 == x);
+    }
+
+    #[test]
+    fn lat_y_is_inv_of_y_lat() {
+        let n = 2u64.pow(15);
+        let y = 9487;
+        let lat = y_lat(n, y);
+        let y2 = lat_y(n, lat);
+        assert!(y2 as u32 == y);
+    }
 }

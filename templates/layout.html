@@ -12,6 +12,8 @@
   {% match data %}
   {% when PageData::GetCurrent %}
   <script src="/pos.js"></script>
+  {% when PageData::Data with {stations, ref_point, pixels} %}
+  <script src="/move.js"></script>
   {% else %}
   {% endmatch %}
 </head>

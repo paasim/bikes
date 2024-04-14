@@ -1,3 +1,9 @@
+bikes (0.2.0) UNRELEASED; urgency=low
+  * add touch screen navigation and fix zoom level (and remove distance from saved groups)
+  * refactor a lot
+  * add a github release
+ -- Markus Paasiniemi <paasim@iki.fi>  Tue, 16 Apr 2024 7:20:46 +0200
+
 bikes (0.1.0) UNRELEASED; urgency=low
   * Initial release.
  -- Markus Paasiniemi <paasim@iki.fi>  Thu, 08 Feb 2024 19:12:46 +0200

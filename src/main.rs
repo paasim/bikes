@@ -1,7 +1,6 @@
 mod conf;
 mod db;
 mod err;
-mod html_template;
 mod page;
 mod server;
 mod station;

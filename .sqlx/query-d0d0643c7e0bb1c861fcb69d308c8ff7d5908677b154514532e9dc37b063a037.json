@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT name, lon, lat, distance AS \"distance: u16\"\n            FROM station_group WHERE name LIKE ?",
+  "query": "SELECT name, lon, lat FROM station_group WHERE name LIKE ?",
   "describe": {
     "columns": [
       {
@@ -17,11 +17,6 @@
         "name": "lat",
         "ordinal": 2,
         "type_info": "Float"
-      },
-      {
-        "name": "distance: u16",
-        "ordinal": 3,
-        "type_info": "Int64"
       }
     ],
     "parameters": {
@@ -30,9 +25,8 @@
     "nullable": [
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "f9f1b09f798628955c01e00ca978bcbc46c409ed408e6aadf824f39b2501d81b"
+  "hash": "d0d0643c7e0bb1c861fcb69d308c8ff7d5908677b154514532e9dc37b063a037"
 }

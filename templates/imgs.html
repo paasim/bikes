@@ -4,7 +4,7 @@
   <img src="{{ ref_point.img_url(0, 1) }}" style="border-bottom-left-radius: var(--img-radius)" />
   <img src="{{ ref_point.img_url(1, 1) }}" style="border-bottom-right-radius: var(--img-radius)" />
   {% for station in stations %}
-  <p class="pin {{ station.count_class() }}" style="{{ station.pin_loc(ref_point, pixels.clone()) }}">{{ station.id }}
+  <p class="pin {{ station.count_class() }}" style="{{ station.pin_loc() }}">{{ station.id }}
   </p>
   {% endfor %}
 </div>

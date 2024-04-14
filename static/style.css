@@ -22,6 +22,11 @@ table,
   margin-right: auto;
 }
 
+.img-container {
+  height: 100%;
+  overflow: hidden;
+}
+
 a {
   font-size: medium;
   text-decoration: none;

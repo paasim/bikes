@@ -1,10 +1,9 @@
 use crate::err::{AppError, Res};
-use crate::html_template::HtmlTemplate;
-use crate::station::{Group, Station};
+use crate::station::{Group, Station, StationData};
 use crate::tile::Tile;
 use askama::Template;
-use axum::response::IntoResponse;
 use axum::response::Response;
+use axum::response::{Html, IntoResponse};
 
 #[derive(Template)]
 #[template(path = "layout.html")]
@@ -15,7 +14,10 @@ pub struct Page {
 
 impl Page {
     pub fn mk_response(groups: Vec<Group>, data: PageData) -> Response {
-        HtmlTemplate(Self { groups, data }).into_response()
+        match (Self { groups, data }).render() {
+            Ok(s) => Html(s).into_response(),
+            Err(e) => AppError::from(e).into_response(),
+        }
     }
 }
 
@@ -30,14 +32,18 @@ pub enum PageData {
 }
 
 impl PageData {
-    pub fn with_data(stations: Vec<Station>) -> Res<Self> {
-        let ref_point = Tile::from_lat_lons(stations.iter().map(|s| (s.lat, s.lon))).ok_or(
-            AppError::from("Can't find a zoom level that covers the stations"),
-        )?;
+    pub fn with_data(
+        d: (i8, i8),
+        lon_deg: f64,
+        lat_deg: f64,
+        station_data: StationData,
+    ) -> Res<Self> {
+        let ref_point = Tile::ref_point(15, lon_deg, lat_deg) + d;
+        let pixels = 350;
         Ok(Self::Data {
-            stations,
+            stations: station_data.into_stations(&ref_point, pixels),
             ref_point,
-            pixels: 350,
+            pixels,
         })
     }
 }

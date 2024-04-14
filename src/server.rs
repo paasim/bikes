@@ -1,7 +1,7 @@
 use crate::conf::{Conf, DtConf};
 use crate::db::get_con_pool;
 use crate::err::Res;
-use crate::station::{get_groups, get_nearby_stations, get_stations};
+use crate::station::{get_group_stations, get_groups, get_nearby_stations};
 use crate::tile::get_img;
 use axum::extract::Request;
 use axum::response::Response;
@@ -28,7 +28,7 @@ pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
     let app = Router::new()
         .route("/", get(get_groups))
         .with_state(pool.clone())
-        .route("/stations/:name", get(get_stations))
+        .route("/stations/:name", get(get_group_stations))
         .route("/nearby-stations", get(get_nearby_stations))
         .route("/img", get(get_img))
         .with_state((pool, dt_conf))
@@ -41,25 +41,14 @@ pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
 }
 
 fn default_span(request: &Request) -> Span {
-    let request_method = request.method();
-    let request_uri = request.uri();
-    let request_version = request.version();
-    let request_headers = request.headers();
-    tracing::info_span!(
-        "request",
-        "method={} uri={} version={:?} headers={:?}",
-        request_method,
-        request_uri,
-        request_version,
-        request_headers
-    )
+    tracing::info_span!("request", "{} {}", request.method(), request.uri())
 }
 
 fn log_status(response: &Response, latency: Duration, _span: &Span) {
-    let stat = response.status();
-    if stat.is_client_error() || stat.is_server_error() {
-        tracing::error!("{} in {:?}", stat, latency)
+    let status = response.status();
+    if status.is_client_error() || status.is_server_error() {
+        tracing::error!(%status, ?latency)
     } else {
-        tracing::info!("{} in {:?}", stat, latency)
+        tracing::info!(%status, ?latency)
     }
 }

@@ -1,5 +1,5 @@
 function redirectLatLon(lat, lon) {
-  window.location.replace(`?latitude=${lat}&longitude=${lon}`);
+  window.location.replace(`?lat=${lat}&lon=${lon}`);
 }
 
 function getLocation() {

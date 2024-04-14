@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO image (x, y, z, data) VALUES (?, ?, ?, ?)\n              ON CONFLICT(x, y, z)\n              DO UPDATE SET data=excluded.data, created=unixepoch();\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "48b605719d0edd798fbc96098c33b417bfb55b1f9d385ccc1accb815323e5d5c"
+}
