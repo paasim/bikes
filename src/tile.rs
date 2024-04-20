@@ -1,6 +1,7 @@
 use crate::conf::DtConf;
 use crate::err::Res;
 use axum::extract::{Query, State};
+use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::{query, SqlitePool};
 use std::ops::Add;
@@ -33,7 +34,7 @@ impl Tile {
     }
 
     pub fn digitransit_url(&self, img_url: &str) -> String {
-        format!("{}/{}/{}/{}@2x.png", img_url, self.z, self.x, self.y)
+        format!("{}/{}/{}/{}.png", img_url, self.z, self.x, self.y)
     }
 
     pub fn img_url(&self, dx: u32, dy: u32) -> String {
@@ -110,17 +111,23 @@ pub fn y_lat(n: u64, y: u32) -> f64 {
     lat_rad / std::f64::consts::PI * 180.0
 }
 
-pub async fn get_img(
-    State((pool, dt_conf)): State<(SqlitePool, Arc<DtConf>)>,
-    Query(tile): Query<Tile>,
-) -> Res<Vec<u8>> {
-    if let Some(v) = tile.get_cached_img(&pool).await? {
+async fn cached_img(pool: &SqlitePool, dt_conf: &DtConf, tile: Tile) -> Res<Vec<u8>> {
+    if let Some(v) = tile.get_cached_img(pool).await? {
         return Ok(v);
     }
     let resp = dt_conf.img_request(&tile).await?;
     let b = resp.bytes().await?.to_vec();
-    tile.cache_img(&pool, &b).await?;
+    tile.cache_img(pool, &b).await?;
     Ok(b)
+}
+
+pub async fn get_img(
+    State((pool, dt_conf)): State<(SqlitePool, Arc<DtConf>)>,
+    Query(tile): Query<Tile>,
+) -> Res<Response> {
+    let img = cached_img(&pool, &dt_conf, tile).await?;
+    let headers = [(axum::http::header::CACHE_CONTROL, "max-age=604800")];
+    Ok((headers, img).into_response())
 }
 
 #[cfg(test)]

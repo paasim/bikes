@@ -1,3 +1,7 @@
+bikes (0.2.1) UNRELEASED; urgency=low
+  * add cache-control to images and reduce image sizes
+ -- Markus Paasiniemi <paasim@iki.fi>  Tue, 20 Apr 2024 13:20:00 +0200
+
 bikes (0.2.0) UNRELEASED; urgency=low
   * add touch screen navigation and fix zoom level (and remove distance from saved groups)
   * refactor a lot
