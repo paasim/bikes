@@ -28,7 +28,7 @@ pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
     let app = Router::new()
         .route("/", get(get_groups))
         .with_state(pool.clone())
-        .route("/stations/:name", get(get_group_stations))
+        .route("/stations/{name}", get(get_group_stations))
         .route("/nearby-stations", get(get_nearby_stations))
         .route("/img", get(get_img))
         .with_state((pool, dt_conf))
