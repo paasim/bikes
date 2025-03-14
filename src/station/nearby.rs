@@ -1,4 +1,4 @@
-use super::{mk_stations_page, Group, LocDelta};
+use super::{Group, LocDelta, mk_stations_page};
 use crate::conf::DtConf;
 use crate::err::Res;
 use crate::page::{Page, PageData};

@@ -1,6 +1,6 @@
 use crate::err::Res;
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
-use sqlx::{migrate, SqlitePool};
+use sqlx::{SqlitePool, migrate};
 use std::str::FromStr;
 
 pub async fn get_con_pool(db_path: &str) -> Res<SqlitePool> {

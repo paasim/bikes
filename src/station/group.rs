@@ -1,5 +1,5 @@
-use super::mk_stations_page;
 use super::LocDelta;
+use super::mk_stations_page;
 use crate::conf::DtConf;
 use crate::err::Res;
 use crate::page::Page;
@@ -7,7 +7,7 @@ use crate::page::PageData;
 use axum::extract::State;
 use axum::extract::{Path, Query};
 use axum::response::Response;
-use sqlx::{query_as, SqlitePool};
+use sqlx::{SqlitePool, query_as};
 use std::sync::Arc;
 
 pub struct Group {

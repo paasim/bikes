@@ -3,7 +3,7 @@ use crate::err::Res;
 use axum::extract::{Query, State};
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
-use sqlx::{query, SqlitePool};
+use sqlx::{SqlitePool, query};
 use std::ops::Add;
 use std::sync::Arc;
 

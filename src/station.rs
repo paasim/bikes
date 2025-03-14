@@ -2,7 +2,7 @@ use crate::conf::DtConf;
 use crate::err::Res;
 use crate::page::{Page, PageData};
 use axum::response::Response;
-pub use group::{get_group_stations, get_groups, Group};
+pub use group::{Group, get_group_stations, get_groups};
 pub use nearby::get_nearby_stations;
 use serde::Deserialize;
 use sqlx::SqlitePool;
