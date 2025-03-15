@@ -54,9 +54,15 @@ fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> Stri
     format!(
         r#"
 {{
-  nearest(lon: {}, lat: {}, maxDistance: {}, maxResults: {}, filterByPlaceTypes: [BICYCLE_RENT]) {{
+  nearest(
+    lon: {}, lat: {}, maxDistance: {}, maxResults: {},
+    filterByPlaceTypes: [VEHICLE_RENT],
+    filterByModes: [BICYCLE]
+    filterByNetwork: ["smoove", "vantaa"]
+  ) {{
     edges {{
       node {{
+        distance
         place {{
           lat
           lon
@@ -67,7 +73,6 @@ fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> Stri
             stationId
           }}
         }}
-        distance
       }}
     }}
   }}
