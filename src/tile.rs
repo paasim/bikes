@@ -1,4 +1,4 @@
-use crate::conf::DtConf;
+use crate::conf::DigitransitConf;
 use crate::err::Res;
 use axum::extract::{Query, State};
 use axum::response::{IntoResponse, Response};
@@ -111,7 +111,7 @@ pub fn y_lat(n: u64, y: u32) -> f64 {
     lat_rad / std::f64::consts::PI * 180.0
 }
 
-async fn cached_img(pool: &SqlitePool, dt_conf: &DtConf, tile: Tile) -> Res<Vec<u8>> {
+async fn cached_img(pool: &SqlitePool, dt_conf: &DigitransitConf, tile: Tile) -> Res<Vec<u8>> {
     if let Some(v) = tile.get_cached_img(pool).await? {
         return Ok(v);
     }
@@ -122,7 +122,7 @@ async fn cached_img(pool: &SqlitePool, dt_conf: &DtConf, tile: Tile) -> Res<Vec<
 }
 
 pub async fn get_img(
-    State((pool, dt_conf)): State<(SqlitePool, Arc<DtConf>)>,
+    State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Query(tile): Query<Tile>,
 ) -> Res<Response> {
     let img = cached_img(&pool, &dt_conf, tile).await?;

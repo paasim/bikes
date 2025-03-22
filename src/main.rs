@@ -1,5 +1,4 @@
 mod conf;
-mod db;
 mod err;
 mod page;
 mod server;

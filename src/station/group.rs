@@ -1,6 +1,6 @@
 use super::LocDelta;
 use super::mk_stations_page;
-use crate::conf::DtConf;
+use crate::conf::DigitransitConf;
 use crate::err::Res;
 use crate::page::Page;
 use crate::page::PageData;
@@ -48,7 +48,7 @@ impl Group {
 }
 
 pub async fn get_group_stations(
-    State((pool, dt_conf)): State<(SqlitePool, Arc<DtConf>)>,
+    State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Path(grp_name): Path<String>,
     Query(loc_d): Query<LocDelta>,
 ) -> Res<Response> {

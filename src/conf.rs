@@ -1,20 +1,26 @@
 use crate::err::Res;
 use crate::tile::Tile;
+use sqlx::sqlite::SqliteConnectOptions;
+use sqlx::{SqlitePool, migrate};
 use std::env;
 use std::future::Future;
+use std::net::SocketAddr;
+use std::str::FromStr;
+use tokio::net::TcpListener;
 
 pub fn get_var(var_name: &str) -> Res<String> {
     env::var(var_name).map_err(|_| format!("environment variable '{}' missing", var_name).into())
 }
 
+/// Config variables related to digitransit
 #[derive(Debug)]
-pub struct DtConf {
+pub struct DigitransitConf {
     routing_url: String,
     img_url: String,
     api_key: String,
 }
 
-impl DtConf {
+impl DigitransitConf {
     fn from_env() -> Res<Self> {
         Ok(Self {
             routing_url: get_var("DIGITRANSIT_ROUTING_URL")?,
@@ -23,6 +29,7 @@ impl DtConf {
         })
     }
 
+    /// Request for nearby bike stations
     pub fn nearby_request(
         &self,
         lon: f64,
@@ -38,6 +45,7 @@ impl DtConf {
             .send()
     }
 
+    /// Request for tile image (as png)
     pub fn img_request(
         &self,
         tile: &Tile,
@@ -82,21 +90,35 @@ fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> Stri
     )
 }
 
+/// Config variables related to the app itself
 #[derive(Debug)]
-pub struct Conf {
-    pub db_url: String,
-    pub port: u16,
+pub struct AppConf {
+    db_url: String,
+    port: u16,
 }
 
-impl Conf {
+impl AppConf {
     fn from_env() -> Res<Self> {
         Ok(Self {
             db_url: get_var("DATABASE_URL")?,
             port: get_var("PORT")?.parse()?,
         })
     }
+
+    pub async fn con_pool(&self) -> Res<SqlitePool> {
+        let opt = SqliteConnectOptions::from_str(&self.db_url)?.create_if_missing(true);
+        let pool = SqlitePool::connect_with(opt).await?;
+
+        migrate!().run(&pool).await?;
+        Ok(pool)
+    }
+
+    pub async fn listener(&self) -> Res<TcpListener> {
+        Ok(TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], self.port))).await?)
+    }
 }
 
-pub fn get_conf() -> Res<(Conf, DtConf)> {
-    Ok((Conf::from_env()?, DtConf::from_env()?))
+/// Read app and digitransit configuration variables from the environment
+pub fn get_conf() -> Res<(AppConf, DigitransitConf)> {
+    Ok((AppConf::from_env()?, DigitransitConf::from_env()?))
 }

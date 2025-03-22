@@ -1,5 +1,5 @@
 use super::{Group, LocDelta, mk_stations_page};
-use crate::conf::DtConf;
+use crate::conf::DigitransitConf;
 use crate::err::Res;
 use crate::page::{Page, PageData};
 use axum::extract::{Query, State};
@@ -21,7 +21,7 @@ impl CurrentLocation {
 }
 
 pub async fn get_nearby_stations(
-    State((pool, dt_conf)): State<(SqlitePool, Arc<DtConf>)>,
+    State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Query(loc): Query<CurrentLocation>,
     Query(loc_d): Query<LocDelta>,
 ) -> Res<Response> {

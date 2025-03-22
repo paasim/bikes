@@ -1,5 +1,5 @@
 use super::Station;
-use crate::conf::DtConf;
+use crate::conf::DigitransitConf;
 use crate::err::Res;
 use crate::tile::Tile;
 use serde::Deserialize;
@@ -18,7 +18,7 @@ pub struct StationObs {
 
 impl StationData {
     pub async fn get(
-        dt_conf: &DtConf,
+        dt_conf: &DigitransitConf,
         lon: f64,
         lat: f64,
         max_distance: u16,

@@ -1,5 +1,4 @@
-use crate::conf::{Conf, DtConf};
-use crate::db::get_con_pool;
+use crate::conf::{AppConf, DigitransitConf};
 use crate::err::Res;
 use crate::station::{get_group_stations, get_groups, get_nearby_stations};
 use crate::tile::get_img;
@@ -7,16 +6,14 @@ use axum::Router;
 use axum::extract::Request;
 use axum::response::Response;
 use axum::routing::get;
-use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::net::TcpListener;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing::{Level, Span};
 
 #[tokio::main]
-pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
+pub async fn run(app_conf: AppConf, dt_conf: DigitransitConf) -> Res<()> {
     tracing_subscriber::fmt::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -24,7 +21,8 @@ pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
     let trace = make_span_with.on_response(log_status);
 
     let dt_conf = Arc::new(dt_conf);
-    let pool = get_con_pool(&conf.db_url).await?;
+    let pool = app_conf.con_pool().await?;
+    let listener = app_conf.listener().await?;
     let app = Router::new()
         .route("/", get(get_groups))
         .with_state(pool.clone())
@@ -34,7 +32,6 @@ pub async fn run(conf: Conf, dt_conf: DtConf) -> Res<()> {
         .with_state((pool, dt_conf))
         .fallback_service(ServeDir::new("static"))
         .layer(trace);
-    let listener = TcpListener::bind(SocketAddr::from(([127, 0, 0, 1], conf.port))).await?;
 
     tracing::info!("serving on {}", listener.local_addr()?);
     Ok(axum::serve(listener, app).await?)

@@ -1,4 +1,4 @@
-use crate::conf::DtConf;
+use crate::conf::DigitransitConf;
 use crate::err::Res;
 use crate::page::{Page, PageData};
 use axum::response::Response;
@@ -49,7 +49,7 @@ pub struct LocDelta {
 pub async fn mk_stations_page(
     (lon, lat): (f64, f64),
     loc_d: LocDelta,
-    dt_conf: &DtConf,
+    dt_conf: &DigitransitConf,
     pool: &SqlitePool,
 ) -> Res<Response> {
     let d = (loc_d.dx.unwrap_or(0), loc_d.dy.unwrap_or(0));
