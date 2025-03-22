@@ -1,6 +1,6 @@
 use super::Station;
 use crate::conf::DigitransitConf;
-use crate::err::Res;
+use crate::err::Result;
 use crate::tile::Tile;
 use serde::Deserialize;
 
@@ -23,7 +23,7 @@ impl StationData {
         lat: f64,
         max_distance: u16,
         max_results: u8,
-    ) -> Res<Self> {
+    ) -> Result<Self> {
         let req = dt_conf.nearby_request(lon, lat, max_distance, max_results);
         Ok(req.await?.json::<StationData>().await?)
     }
@@ -47,7 +47,7 @@ impl StationData {
 }
 
 impl<'de> Deserialize<'de> for StationData {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {

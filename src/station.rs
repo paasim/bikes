@@ -1,7 +1,6 @@
 use crate::conf::DigitransitConf;
-use crate::err::Res;
+use crate::err::Result;
 use crate::page::{Page, PageData};
-use axum::response::Response;
 pub use group::{Group, get_group_stations, get_groups};
 pub use nearby::get_nearby_stations;
 use serde::Deserialize;
@@ -51,12 +50,12 @@ pub async fn mk_stations_page(
     loc_d: LocDelta,
     dt_conf: &DigitransitConf,
     pool: &SqlitePool,
-) -> Res<Response> {
+) -> Result<Page> {
     let d = (loc_d.dx.unwrap_or(0), loc_d.dy.unwrap_or(0));
     let maxd = d.0.abs().max(d.1.abs()) + 1;
     let station_data =
         StationData::get(dt_conf, lon, lat, maxd as u16 * 850, (maxd + 1) as u8 * 10).await?;
     let groups = Group::get_all(pool).await?;
     let data = PageData::with_data(d, lon, lat, station_data)?;
-    Ok(Page::mk_response(groups, data))
+    Ok(Page::new(groups, data))
 }

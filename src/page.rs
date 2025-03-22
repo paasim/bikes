@@ -1,4 +1,5 @@
-use crate::err::{AppError, Res};
+use crate::err::Result;
+use crate::err_to_resp;
 use crate::station::{Group, Station, StationData};
 use crate::tile::Tile;
 use askama::Template;
@@ -13,11 +14,14 @@ pub struct Page {
 }
 
 impl Page {
-    pub fn mk_response(groups: Vec<Group>, data: PageData) -> Response {
-        match (Self { groups, data }).render() {
-            Ok(s) => Html(s).into_response(),
-            Err(e) => AppError::from(e).into_response(),
-        }
+    pub fn new(groups: Vec<Group>, data: PageData) -> Self {
+        Self { groups, data }
+    }
+}
+
+impl IntoResponse for Page {
+    fn into_response(self) -> Response {
+        Html(err_to_resp!(self.render())).into_response()
     }
 }
 
@@ -37,7 +41,7 @@ impl PageData {
         lon_deg: f64,
         lat_deg: f64,
         station_data: StationData,
-    ) -> Res<Self> {
+    ) -> Result<Self> {
         let ref_point = Tile::ref_point(15, lon_deg, lat_deg) + d;
         let pixels = 350;
         Ok(Self::Data {

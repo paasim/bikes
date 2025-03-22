@@ -1,10 +1,10 @@
 use crate::conf::DigitransitConf;
-use crate::err::Res;
+use crate::err::Result;
+use crate::err_to_resp;
 use axum::extract::{Query, State};
 use axum::response::{IntoResponse, Response};
 use serde::Deserialize;
 use sqlx::{SqlitePool, query};
-use std::ops::Add;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -41,7 +41,7 @@ impl Tile {
         format!("/img?z={}&x={}&y={}", self.z, self.x + dx, self.y + dy)
     }
 
-    pub async fn get_cached_img(&self, pool: &SqlitePool) -> Res<Option<Vec<u8>>> {
+    pub async fn get_cached_img(&self, pool: &SqlitePool) -> Result<Option<Vec<u8>>> {
         let row = query!(
             r#"SELECT data FROM image WHERE x = ? AND y = ? AND z = ?"#,
             self.x,
@@ -53,7 +53,7 @@ impl Tile {
         Ok(row.map(|r| r.data))
     }
 
-    pub async fn cache_img(&self, pool: &SqlitePool, data: &[u8]) -> Res<()> {
+    pub async fn cache_img(&self, pool: &SqlitePool, data: &[u8]) -> Result<()> {
         query!(
             r#"
             INSERT INTO image (x, y, z, data) VALUES (?, ?, ?, ?)
@@ -71,7 +71,7 @@ impl Tile {
     }
 }
 
-impl Add<(i8, i8)> for Tile {
+impl std::ops::Add<(i8, i8)> for Tile {
     type Output = Self;
 
     fn add(mut self, (dx, dy): (i8, i8)) -> Self::Output {
@@ -111,7 +111,7 @@ pub fn y_lat(n: u64, y: u32) -> f64 {
     lat_rad / std::f64::consts::PI * 180.0
 }
 
-async fn cached_img(pool: &SqlitePool, dt_conf: &DigitransitConf, tile: Tile) -> Res<Vec<u8>> {
+async fn cached_img(pool: &SqlitePool, dt_conf: &DigitransitConf, tile: Tile) -> Result<Vec<u8>> {
     if let Some(v) = tile.get_cached_img(pool).await? {
         return Ok(v);
     }
@@ -124,10 +124,10 @@ async fn cached_img(pool: &SqlitePool, dt_conf: &DigitransitConf, tile: Tile) ->
 pub async fn get_img(
     State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Query(tile): Query<Tile>,
-) -> Res<Response> {
-    let img = cached_img(&pool, &dt_conf, tile).await?;
+) -> Response {
+    let img = err_to_resp!(cached_img(&pool, &dt_conf, tile).await);
     let headers = [(axum::http::header::CACHE_CONTROL, "max-age=604800")];
-    Ok((headers, img).into_response())
+    (headers, img).into_response()
 }
 
 #[cfg(test)]

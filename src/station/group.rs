@@ -1,11 +1,13 @@
 use super::LocDelta;
 use super::mk_stations_page;
 use crate::conf::DigitransitConf;
-use crate::err::Res;
+use crate::err::Result;
+use crate::err_to_resp;
 use crate::page::Page;
 use crate::page::PageData;
 use axum::extract::State;
 use axum::extract::{Path, Query};
+use axum::response::IntoResponse;
 use axum::response::Response;
 use sqlx::{SqlitePool, query_as};
 use std::sync::Arc;
@@ -25,7 +27,7 @@ impl Group {
         (self.lon, self.lat)
     }
 
-    pub async fn get_all(con: &SqlitePool) -> Res<Vec<Self>> {
+    pub async fn get_all(con: &SqlitePool) -> Result<Vec<Self>> {
         let rows = query_as!(
             Self,
             r#"SELECT name, lon, lat FROM station_group ORDER BY name ASC"#
@@ -35,7 +37,7 @@ impl Group {
         Ok(rows)
     }
 
-    pub async fn get_with_name(con: &SqlitePool, name: &str) -> Res<Self> {
+    pub async fn get_with_name(con: &SqlitePool, name: &str) -> Result<Self> {
         let row = query_as!(
             Self,
             r#"SELECT name, lon, lat FROM station_group WHERE name LIKE ?"#,
@@ -51,12 +53,13 @@ pub async fn get_group_stations(
     State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Path(grp_name): Path<String>,
     Query(loc_d): Query<LocDelta>,
-) -> Res<Response> {
-    let grp = Group::get_with_name(&pool, &grp_name).await?;
-    mk_stations_page(grp.lon_lat(), loc_d, &dt_conf, &pool).await
+) -> Response {
+    let grp = err_to_resp!(Group::get_with_name(&pool, &grp_name).await);
+
+    err_to_resp!(mk_stations_page(grp.lon_lat(), loc_d, &dt_conf, &pool).await).into_response()
 }
 
-pub async fn get_groups(State(pool): State<SqlitePool>) -> Res<Response> {
-    let groups = Group::get_all(&pool).await?;
-    Ok(Page::mk_response(groups, PageData::NoData))
+pub async fn get_groups(State(pool): State<SqlitePool>) -> Response {
+    let groups = err_to_resp!(Group::get_all(&pool).await);
+    Page::new(groups, PageData::NoData).into_response()
 }

@@ -1,5 +1,5 @@
 use crate::conf::{AppConf, DigitransitConf};
-use crate::err::Res;
+use crate::err::Result;
 use crate::station::{get_group_stations, get_groups, get_nearby_stations};
 use crate::tile::get_img;
 use axum::Router;
@@ -13,7 +13,7 @@ use tower_http::trace::TraceLayer;
 use tracing::{Level, Span};
 
 #[tokio::main]
-pub async fn run(app_conf: AppConf, dt_conf: DigitransitConf) -> Res<()> {
+pub async fn run(app_conf: AppConf, dt_conf: DigitransitConf) -> Result<()> {
     tracing_subscriber::fmt::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -22,7 +22,6 @@ pub async fn run(app_conf: AppConf, dt_conf: DigitransitConf) -> Res<()> {
 
     let dt_conf = Arc::new(dt_conf);
     let pool = app_conf.con_pool().await?;
-    let listener = app_conf.listener().await?;
     let app = Router::new()
         .route("/", get(get_groups))
         .with_state(pool.clone())
@@ -33,6 +32,7 @@ pub async fn run(app_conf: AppConf, dt_conf: DigitransitConf) -> Res<()> {
         .fallback_service(ServeDir::new("static"))
         .layer(trace);
 
+    let listener = app_conf.listener().await?;
     tracing::info!("serving on {}", listener.local_addr()?);
     Ok(axum::serve(listener, app).await?)
 }
