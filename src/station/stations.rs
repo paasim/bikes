@@ -4,6 +4,9 @@ use crate::err::Result;
 use crate::tile::Tile;
 use serde::Deserialize;
 
+/// Struct that contains all the station information from the API.
+/// Use [StationData::into_stations] for turning it into a list of stations
+/// renderable in the result
 pub struct StationData(Vec<StationObs>);
 
 #[derive(Debug)]
@@ -28,6 +31,7 @@ impl StationData {
         Ok(req.await?.json::<StationData>().await?)
     }
 
+    /// Calculates the relative coordinate within the tile for each station
     pub fn into_stations(self, ref_pt: &Tile, px: u16) -> Vec<Station> {
         self.0
             .into_iter()

@@ -7,6 +7,7 @@ use serde::Deserialize;
 use sqlx::{SqlitePool, query};
 use std::sync::Arc;
 
+/// Tile in the map, used for querying the images
 #[derive(Debug, Deserialize)]
 pub struct Tile {
     pub x: u32,
@@ -15,6 +16,7 @@ pub struct Tile {
 }
 
 impl Tile {
+    /// Reference point, ie. tile with zooming level z containing the given lon,lat -pair
     pub fn ref_point(z: u8, lon_deg: f64, lat_deg: f64) -> Tile {
         let n = 1 << z;
         let x = (lon_x(n, lon_deg) - 0.5) as u32;
@@ -22,6 +24,7 @@ impl Tile {
         Self { x, y, z }
     }
 
+    /// Calculate coordinates with respect to the tile and given resolution (px)
     pub fn rel_coord(&self, px: u16, lon_deg: f64, lat_deg: f64) -> Option<(u16, u16)> {
         let n = 1 << self.z;
         let px = px as f64;
@@ -33,15 +36,17 @@ impl Tile {
         Some((x.round() as u16, y.round() as u16))
     }
 
+    /// url for querying from digitransit
     pub fn digitransit_url(&self, img_url: &str) -> String {
         format!("{}/{}/{}/{}.png", img_url, self.z, self.x, self.y)
     }
 
-    pub fn img_url(&self, dx: u32, dy: u32) -> String {
+    /// path for querying the image from the backend
+    pub fn img_path(&self, dx: u32, dy: u32) -> String {
         format!("/img?z={}&x={}&y={}", self.z, self.x + dx, self.y + dy)
     }
 
-    pub async fn get_cached_img(&self, pool: &SqlitePool) -> Result<Option<Vec<u8>>> {
+    async fn get_cached_img(&self, pool: &SqlitePool) -> Result<Option<Vec<u8>>> {
         let row = query!(
             r#"SELECT data FROM image WHERE x = ? AND y = ? AND z = ?"#,
             self.x,
@@ -53,7 +58,7 @@ impl Tile {
         Ok(row.map(|r| r.data))
     }
 
-    pub async fn cache_img(&self, pool: &SqlitePool, data: &[u8]) -> Result<()> {
+    async fn cache_img(&self, pool: &SqlitePool, data: &[u8]) -> Result<()> {
         query!(
             r#"
             INSERT INTO image (x, y, z, data) VALUES (?, ?, ?, ?)
@@ -92,7 +97,7 @@ pub fn lat_y(n: u64, lat_deg: f64) -> f64 {
     (1.0 - lat_rad.tan().asinh() / std::f64::consts::PI) / 2.0 * n as f64
 }
 
-// approx 600m for zoom level 15, => diagonal is approx 850m
+/// approx 600m for zoom level 15, => diagonal is approx 850m
 fn _tile_height_m(n: u64) -> f64 {
     let y = lat_y(n, 60.0) as u32;
     (y_lat(n, y) - y_lat(n, y + 1)) * 110.412 * 1000.0
@@ -121,6 +126,7 @@ async fn cached_img(pool: &SqlitePool, dt_conf: &DigitransitConf, tile: Tile) ->
     Ok(b)
 }
 
+/// Get an image for a tile
 pub async fn get_img(
     State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Query(tile): Query<Tile>,

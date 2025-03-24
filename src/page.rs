@@ -6,6 +6,7 @@ use askama::Template;
 use axum::response::Response;
 use axum::response::{Html, IntoResponse};
 
+/// For rendering the data as HTML
 #[derive(Template)]
 #[template(path = "layout.html")]
 pub struct Page {
@@ -25,6 +26,10 @@ impl IntoResponse for Page {
     }
 }
 
+/// There are three separate cases:
+/// - the landing page with no data (except for the station group links that is essentially just a name and the location of the station group)
+/// - page with a known location; this queries for a list of nearby stations and a tile that contains the reference point
+/// - page that essentially gets location from the browser and redirects to a page with a known location
 pub enum PageData {
     GetCurrent,
     NoData,
@@ -36,6 +41,7 @@ pub enum PageData {
 }
 
 impl PageData {
+    /// The interesting case - construct page data from location and list of nearby stations. It turns [StationData] into a vec of [Station] that contain most importantly the distance to the given reference point.
     pub fn with_data(
         d: (i8, i8),
         lon_deg: f64,

@@ -12,6 +12,7 @@ use axum::response::Response;
 use sqlx::{SqlitePool, query_as};
 use std::sync::Arc;
 
+/// Represents a station group, has a name and location
 pub struct Group {
     name: String,
     lon: f64,
@@ -27,6 +28,7 @@ impl Group {
         (self.lon, self.lat)
     }
 
+    /// List all station groups
     pub async fn get_all(con: &SqlitePool) -> Result<Vec<Self>> {
         let rows = query_as!(
             Self,
@@ -37,6 +39,7 @@ impl Group {
         Ok(rows)
     }
 
+    /// Station group with the given name
     pub async fn get_with_name(con: &SqlitePool, name: &str) -> Result<Self> {
         let row = query_as!(
             Self,
@@ -49,6 +52,7 @@ impl Group {
     }
 }
 
+/// Render all the stations at a given group
 pub async fn get_group_stations(
     State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Path(grp_name): Path<String>,
@@ -59,6 +63,7 @@ pub async fn get_group_stations(
     err_to_resp!(mk_stations_page(grp.lon_lat(), loc_d, &dt_conf, &pool).await).into_response()
 }
 
+/// Render all the available groups
 pub async fn get_groups(State(pool): State<SqlitePool>) -> Response {
     let groups = err_to_resp!(Group::get_all(&pool).await);
     Page::new(groups, PageData::NoData).into_response()

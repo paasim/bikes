@@ -21,6 +21,7 @@ impl CurrentLocation {
     }
 }
 
+/// Render nearby stations (given current location)
 pub async fn get_nearby_stations(
     State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
     Query(loc): Query<CurrentLocation>,

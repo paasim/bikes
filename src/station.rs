@@ -22,10 +22,12 @@ pub struct Station {
 }
 
 impl Station {
+    /// css for placing the pin for the station on top of the tile
     pub fn pin_loc(&self) -> String {
         format!("left: {}px; top: {}px;", self.x, self.y)
     }
 
+    /// How many bikes left? Empty / low / mid / high
     pub fn count_class(&self) -> &str {
         if self.count == 0 {
             "empty"
@@ -39,12 +41,14 @@ impl Station {
     }
 }
 
+/// Delta for the given tile from (0,0) (ie. upper left corner) tile
 #[derive(Deserialize, Debug)]
 pub struct LocDelta {
     dx: Option<i8>,
     dy: Option<i8>,
 }
 
+/// Get all the relevant information for a given location (nearby stations)
 pub async fn mk_stations_page(
     (lon, lat): (f64, f64),
     loc_d: LocDelta,
