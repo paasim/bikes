@@ -32,14 +32,14 @@ jobs:
 
     strategy:
       matrix:
-        arch: [x86_64, arm64]
+        arch: [amd64, arm64]
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: install dependencies and build (x86_64)
-      if: matrix.arch == 'x86_64'
+    - name: install dependencies and build (amd64)
+      if: matrix.arch == 'amd64'
       run: |
         cargo build --verbose --release
         strip target/release/bikes
