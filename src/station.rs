@@ -1,4 +1,3 @@
-use crate::conf::DigitransitConf;
 use crate::err::Result;
 use crate::page::{Page, PageData};
 pub use group::{Group, get_group_stations, get_groups};
@@ -52,13 +51,13 @@ pub struct LocDelta {
 pub async fn mk_stations_page(
     (lon, lat): (f64, f64),
     loc_d: LocDelta,
-    dt_conf: &DigitransitConf,
+    api_key: &str,
     pool: &SqlitePool,
 ) -> Result<Page> {
     let d = (loc_d.dx.unwrap_or(0), loc_d.dy.unwrap_or(0));
     let maxd = d.0.abs().max(d.1.abs()) + 1;
     let station_data =
-        StationData::get(dt_conf, lon, lat, maxd as u16 * 850, (maxd + 1) as u8 * 10).await?;
+        StationData::get(api_key, lon, lat, maxd as u16 * 850, (maxd + 1) as u8 * 10).await?;
     let groups = Group::get_all(pool).await?;
     let data = PageData::with_data(d, lon, lat, station_data)?;
     Ok(Page::new(groups, data))

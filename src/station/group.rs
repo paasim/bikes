@@ -1,6 +1,5 @@
 use super::LocDelta;
 use super::mk_stations_page;
-use crate::conf::DigitransitConf;
 use crate::err::Result;
 use crate::err_to_resp;
 use crate::page::Page;
@@ -54,13 +53,13 @@ impl Group {
 
 /// Render all the stations at a given group
 pub async fn get_group_stations(
-    State((pool, dt_conf)): State<(SqlitePool, Arc<DigitransitConf>)>,
+    State((pool, api_key)): State<(SqlitePool, Arc<String>)>,
     Path(grp_name): Path<String>,
     Query(loc_d): Query<LocDelta>,
 ) -> Response {
     let grp = err_to_resp!(Group::get_with_name(&pool, &grp_name).await);
-
-    err_to_resp!(mk_stations_page(grp.lon_lat(), loc_d, &dt_conf, &pool).await).into_response()
+    err_to_resp!(mk_stations_page(grp.lon_lat(), loc_d, api_key.as_ref(), &pool).await)
+        .into_response()
 }
 
 /// Render all the available groups

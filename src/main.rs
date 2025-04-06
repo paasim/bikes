@@ -6,7 +6,7 @@ mod station;
 mod tile;
 
 fn main() {
-    if let Err(e) = conf::get_conf().and_then(|(c, dtc)| server::run(c, dtc)) {
+    if let Err(e) = conf::AppConf::from_env().and_then(server::run) {
         eprintln!("{e}");
         std::process::exit(1)
     }

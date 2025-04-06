@@ -1,5 +1,5 @@
 use super::Station;
-use crate::conf::DigitransitConf;
+use crate::conf::nearby_request;
 use crate::err::Result;
 use crate::tile::Tile;
 use serde::Deserialize;
@@ -21,13 +21,13 @@ pub struct StationObs {
 
 impl StationData {
     pub async fn get(
-        dt_conf: &DigitransitConf,
+        api_key: &str,
         lon: f64,
         lat: f64,
         max_distance: u16,
         max_results: u8,
     ) -> Result<Self> {
-        let req = dt_conf.nearby_request(lon, lat, max_distance, max_results);
+        let req = nearby_request(api_key, lon, lat, max_distance, max_results);
         Ok(req.await?.json::<StationData>().await?)
     }
 
