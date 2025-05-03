@@ -1,5 +1,4 @@
 use crate::err::Result;
-use crate::tile::Tile;
 use sqlx::sqlite::SqliteConnectOptions;
 use sqlx::{SqlitePool, migrate};
 use std::env;
@@ -7,71 +6,8 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use tokio::net::TcpListener;
 
-const DIGITRANSIT_ROUTING_URL: &str = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1";
-const DIGITRANSIT_IMG_URL: &str = "https://cdn.digitransit.fi/map/v3/hsl-map";
-
-pub fn get_var(var_name: &str) -> Result<String> {
-    env::var(var_name).map_err(|_| format!("environment variable '{}' missing", var_name).into())
-}
-
-/// Request for nearby bike stations
-pub async fn nearby_request(
-    api_key: &str,
-    lon: f64,
-    lat: f64,
-    max_distance: u16,
-    max_results: u8,
-) -> Result<reqwest::Response> {
-    Ok(reqwest::Client::new()
-        .post(DIGITRANSIT_ROUTING_URL)
-        .header(reqwest::header::CONTENT_TYPE, "application/graphql")
-        .header("digitransit-subscription-key", api_key)
-        .body(nearest_query(lon, lat, max_distance, max_results))
-        .send()
-        .await?)
-}
-
-/// Request for tile image (as png)
-pub async fn img_request(api_key: &str, tile: &Tile) -> Result<reqwest::Response> {
-    let url = tile.digitransit_url(DIGITRANSIT_IMG_URL);
-    Ok(reqwest::Client::new()
-        .get(url)
-        .header("digitransit-subscription-key", api_key)
-        .send()
-        .await?)
-}
-
-fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> String {
-    format!(
-        r#"
-{{
-  nearest(
-    lon: {}, lat: {}, maxDistance: {}, maxResults: {},
-    filterByPlaceTypes: [VEHICLE_RENT],
-    filterByModes: [BICYCLE]
-    filterByNetwork: ["smoove", "vantaa"]
-  ) {{
-    edges {{
-      node {{
-        distance
-        place {{
-          lat
-          lon
-          ...on BikeRentalStation {{
-            name
-            stationId
-            bikesAvailable
-            stationId
-          }}
-        }}
-      }}
-    }}
-  }}
-}}
-    "#,
-        lon, lat, max_distance, max_results
-    )
-}
+pub const DIGITRANSIT_ROUTING_URL: &str = "https://api.digitransit.fi/routing/v2/hsl/gtfs/v1";
+pub const DIGITRANSIT_IMG_URL: &str = "https://cdn.digitransit.fi/map/v3/hsl-map";
 
 /// Config variables related to the app itself
 #[derive(Debug)]
@@ -79,6 +15,10 @@ pub struct AppConf {
     api_key: String,
     db_url: String,
     port: u16,
+}
+
+pub fn get_var(var_name: &str) -> Result<String> {
+    env::var(var_name).map_err(|_| format!("environment variable '{}' missing", var_name).into())
 }
 
 impl AppConf {

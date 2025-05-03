@@ -27,6 +27,9 @@ run: $(DB)
 test:
 	cargo test
 
+test-all:
+	cargo test -- --include-ignored
+
 $(DB):
 	cargo sqlx database create && cargo sqlx migrate run
 

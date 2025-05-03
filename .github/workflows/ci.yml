@@ -24,4 +24,15 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test
+    - name: Run integration tests
+      env:
+        DIGITRANSIT_API_KEY: ${{ secrets.digitransit_api_key }}
+        DATABASE: bikes.db
+        PORT: 3000 # not used but required by conf
+      run: |
+        # do migrations
+        for sql in migrations/*; do
+          sqlite3 ${DATABASE} < $sql
+        done
+        DATABASE_URL=sqlite:${DATABASE} cargo test -- --include-ignored

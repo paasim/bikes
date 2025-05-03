@@ -1,5 +1,5 @@
 use super::Station;
-use crate::conf::nearby_request;
+use crate::conf::DIGITRANSIT_ROUTING_URL;
 use crate::err::Result;
 use crate::tile::Tile;
 use serde::Deserialize;
@@ -27,8 +27,12 @@ impl StationData {
         max_distance: u16,
         max_results: u8,
     ) -> Result<Self> {
-        let req = nearby_request(api_key, lon, lat, max_distance, max_results);
-        Ok(req.await?.json::<StationData>().await?)
+        let req = reqwest::Client::new()
+            .post(DIGITRANSIT_ROUTING_URL)
+            .header(reqwest::header::CONTENT_TYPE, "application/graphql")
+            .header("digitransit-subscription-key", api_key)
+            .body(nearest_query(lon, lat, max_distance, max_results));
+        Ok(req.send().await?.json::<StationData>().await?)
     }
 
     /// Calculates the relative coordinate within the tile for each station
@@ -48,6 +52,38 @@ impl StationData {
             })
             .collect()
     }
+}
+
+fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> String {
+    format!(
+        r#"
+{{
+  nearest(
+    lon: {}, lat: {}, maxDistance: {}, maxResults: {},
+    filterByPlaceTypes: [VEHICLE_RENT],
+    filterByModes: [BICYCLE]
+    filterByNetwork: ["smoove", "vantaa"]
+  ) {{
+    edges {{
+      node {{
+        distance
+        place {{
+          lat
+          lon
+          ...on BikeRentalStation {{
+            name
+            stationId
+            bikesAvailable
+            stationId
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+    "#,
+        lon, lat, max_distance, max_results
+    )
 }
 
 impl<'de> Deserialize<'de> for StationData {

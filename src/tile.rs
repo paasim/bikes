@@ -1,4 +1,4 @@
-use crate::conf::img_request;
+use crate::conf::DIGITRANSIT_IMG_URL;
 use crate::err::Result;
 use crate::err_to_resp;
 use axum::extract::{Query, State};
@@ -74,6 +74,13 @@ impl Tile {
         .await?;
         Ok(())
     }
+
+    pub async fn img_request(&self, api_key: &str) -> Result<Vec<u8>> {
+        let req = reqwest::Client::new()
+            .get(self.digitransit_url(DIGITRANSIT_IMG_URL))
+            .header("digitransit-subscription-key", api_key);
+        Ok(req.send().await?.bytes().await?.to_vec())
+    }
 }
 
 impl std::ops::Add<(i8, i8)> for Tile {
@@ -100,16 +107,14 @@ pub fn lat_y(n: u64, lat_deg: f64) -> f64 {
 /// approx 600m for zoom level 15, => diagonal is approx 850m
 fn _tile_height_m(n: u64) -> f64 {
     let y = lat_y(n, 60.0) as u32;
-    (y_lat(n, y) - y_lat(n, y + 1)) * 110.412 * 1000.0
+    (_y_lat(n, y) - _y_lat(n, y + 1)) * 110.412 * 1000.0
 }
 
-#[allow(dead_code)] // for tests
-pub fn x_lon(n: u64, x: u32) -> f64 {
+fn _x_lon(n: u64, x: u32) -> f64 {
     x as f64 / (n as f64) * 360.0 - 180.0
 }
 
-#[allow(dead_code)] // for tests
-pub fn y_lat(n: u64, y: u32) -> f64 {
+fn _y_lat(n: u64, y: u32) -> f64 {
     let lat_rad = ((1.0 - y as f64 / n as f64 * 2.0) * std::f64::consts::PI)
         .sinh()
         .atan();
@@ -120,11 +125,9 @@ async fn cached_img(pool: &SqlitePool, api_key: &str, tile: Tile) -> Result<Vec<
     if let Some(v) = tile.get_cached_img(pool).await? {
         return Ok(v);
     }
-    let resp = img_request(api_key, &tile).await?;
-
-    let b = resp.bytes().await?.to_vec();
-    tile.cache_img(pool, &b).await?;
-    Ok(b)
+    let data = tile.img_request(api_key).await?;
+    tile.cache_img(pool, &data).await?;
+    Ok(data)
 }
 
 /// Get an image for a tile
@@ -145,7 +148,7 @@ mod tests {
     fn lon_x_is_inv_of_x_lon() {
         let n = 2u64.pow(15);
         let x = 18651;
-        let lon = x_lon(n, x);
+        let lon = _x_lon(n, x);
         let x2 = lon_x(n, lon);
         assert!(x2 as u32 == x);
     }
@@ -154,7 +157,7 @@ mod tests {
     fn lat_y_is_inv_of_y_lat() {
         let n = 2u64.pow(15);
         let y = 9487;
-        let lat = y_lat(n, y);
+        let lat = _y_lat(n, y);
         let y2 = lat_y(n, lat);
         assert!(y2 as u32 == y);
     }
