@@ -47,7 +47,7 @@ impl Group {
         )
         .fetch_optional(con)
         .await?;
-        row.ok_or(format!("No group matching the name '{}'", name).into())
+        row.ok_or(format!("No group matching the name '{name}'").into())
     }
 }
 

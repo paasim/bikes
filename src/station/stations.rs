@@ -59,7 +59,7 @@ fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> Stri
         r#"
 {{
   nearest(
-    lon: {}, lat: {}, maxDistance: {}, maxResults: {},
+    lon: {lon}, lat: {lat}, maxDistance: {max_distance}, maxResults: {max_results},
     filterByPlaceTypes: [VEHICLE_RENT],
     filterByModes: [BICYCLE]
     filterByNetwork: ["smoove", "vantaa"]
@@ -81,8 +81,7 @@ fn nearest_query(lon: f64, lat: f64, max_distance: u16, max_results: u8) -> Stri
     }}
   }}
 }}
-    "#,
-        lon, lat, max_distance, max_results
+    "#
     )
 }
 

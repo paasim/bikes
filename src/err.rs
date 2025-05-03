@@ -29,11 +29,11 @@ macro_rules! err_to_resp {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Askama(e) => write!(f, "{}", e),
-            Error::Axum(e) => write!(f, "{}", e),
-            Error::AxumHttp(e) => write!(f, "{}", e),
-            Error::Reqwest(e) => write!(f, "{}", e),
-            Error::Other(e) => write!(f, "{}", e),
+            Error::Askama(e) => write!(f, "{e}"),
+            Error::Axum(e) => write!(f, "{e}"),
+            Error::AxumHttp(e) => write!(f, "{e}"),
+            Error::Reqwest(e) => write!(f, "{e}"),
+            Error::Other(e) => write!(f, "{e}"),
         }
     }
 }

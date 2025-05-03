@@ -18,7 +18,7 @@ pub struct AppConf {
 }
 
 pub fn get_var(var_name: &str) -> Result<String> {
-    env::var(var_name).map_err(|_| format!("environment variable '{}' missing", var_name).into())
+    env::var(var_name).map_err(|_| format!("environment variable '{var_name}' missing").into())
 }
 
 impl AppConf {
