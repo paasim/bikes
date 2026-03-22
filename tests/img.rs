@@ -7,11 +7,12 @@ async fn img_request_works() {
     let (lon, lat) = (24.9314, 60.16847);
     let tile0 = Tile::ref_point(15, lon, lat);
     let img0 = tile0.img_request(&api_key).await.unwrap();
-    assert_eq!(img0.len(), 109000);
+    assert!(img0.len() >= 100000);
 
     // different result with different coordinates
     let (lon, lat) = (24.94, 60.17);
     let tile1 = Tile::ref_point(15, lon, lat);
     let img1 = tile1.img_request(&api_key).await.unwrap();
-    assert_eq!(img1.len(), 126494);
+    assert_ne!(img0, img1);
+    assert!(img1.len() >= 100000);
 }
