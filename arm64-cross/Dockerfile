@@ -1,4 +1,4 @@
-FROM rust:1.85-bookworm
+FROM rust:1.94-trixie
 
 ARG GROUP_ID
 ARG USER_ID
