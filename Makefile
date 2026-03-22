@@ -24,7 +24,7 @@ run: $(DB)
 	cargo sqlx prepare
 	cargo run
 
-test:
+test: $(DB)
 	cargo test
 
 test-all:
