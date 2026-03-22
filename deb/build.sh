@@ -12,7 +12,7 @@ DEB_NAME="${NAME}_${VERSION}_${ARCH}.deb"
 mkdir "${DEB_SRC}"
 install -Dm755 "${BIN_PATH}/${NAME}" "${DEB_SRC}/usr/bin/${NAME}"
 install -Dm600 "deb/env" "${DEB_SRC}/etc/${NAME}/env"
-install -Dm644 "deb/${NAME}.service" "${DEB_SRC}/lib/systemd/system/${NAME}.service"
+install -Dm644 "deb/${NAME}.service" "${DEB_SRC}/usr/lib/systemd/system/${NAME}.service"
 install -Dm644 static/* -t "${DEB_SRC}/usr/share/${NAME}/static"
 
 install -Dm644 "deb/${NAME}.7" "${DEB_SRC}/usr/share/man/man7/${NAME}.7"
