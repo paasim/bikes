@@ -4,8 +4,8 @@ ARG GROUP_ID
 ARG USER_ID
 
 RUN dpkg --add-architecture arm64 \
-  && apt update \
-  && apt install -y pkg-config crossbuild-essential-arm64 libssl-dev libssl-dev:arm64 \
+  && apt-get update \
+  && apt-get install -y pkg-config crossbuild-essential-arm64 libssl-dev libssl-dev:arm64 \
   && rustup target add aarch64-unknown-linux-gnu \
   && groupadd -g ${GROUP_ID} builder \
   && useradd -rm -d /home/builder -s /bin/bash -u ${USER_ID} -g ${GROUP_ID} builder \
