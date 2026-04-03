@@ -32,7 +32,7 @@ async fn station_data_get_works() {
 
     let stations_exp = [station0, station1];
     for i in 0..2 {
-        //assert_eq!(stations[i].id, stations_exp[i].id);
+        assert_eq!(stations[i].id, stations_exp[i].id);
         assert_eq!(stations[i].name, stations_exp[i].name);
         assert_eq!(stations[i].x, stations_exp[i].x);
         assert_eq!(stations[i].y, stations_exp[i].y);

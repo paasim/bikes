@@ -26,12 +26,6 @@ impl Station {
         format!("left: {}px; top: {}px;", self.x, self.y)
     }
 
-    /// short version of station name for displaying in the map
-    pub fn name_short(&self) -> &str {
-        let n = self.name.ceil_char_boundary(3);
-        &self.name[..n]
-    }
-
     /// How many bikes left? Empty / low / mid / high
     pub fn count_class(&self) -> &str {
         if self.count == 0 {
